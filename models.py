@@ -5,30 +5,28 @@ ma = Marshmallow()
 
 class Motorista(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name_motorista = db.Column(db.String(100), nullable=False)
-    categoria_motorista = db.Column(db.Integer)
-    transportes = db.relationship('Transporte', backref='motorista', lazy=True)
+    nome_motorista = db.Column(db.String(100), nullable=False)
+    idade_motorista = db.Column(db.Integer, nullable=False)
 
-class Transporte(db.Model):
+class Veiculo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    categoria_transporte = db.Column(db.Integer)
+    categoria_veiculo = db.Column(db.Integer, nullable=False)  # 1: Pequeno Porte, 2: Grande Porte
+    placa_veiculo = db.Column(db.String(6), nullable=False)
     motorista_id = db.Column(db.Integer, db.ForeignKey('motorista.id'), nullable=False)
 
 class Rota(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name_rota = db.Column(db.String(100), nullable=False)
-    transportes_rota = db.relationship('Transporte', backref='rota', lazy=True)
-
-
+    nome_rota = db.Column(db.String(100), nullable=False)
+    distancia_rota = db.Column(db.Float, nullable=False)
 
 class MotoristaSchema(ma.Schema):
-    class Meta:
-        fields = ('id', 'name_motorista','categoria_motorista', 'trnasportes')
+    class meta:
+        fields = ('id', 'nome_motorista', 'idade_motorista')
 
-class TransporteSchema(ma.Schema):
-    class Meta:
-        fields = ('id', 'categoria_transporte', 'motorista_id')
+class VeiculoSchema(ma.Schema):
+    class meta:
+        fields = ('id', 'categoria_veiculo', 'placa_veiculo', 'motorista_id')
 
 class RotaSchema(ma.Schema):
-    class Meta:
-        fields:('id','name_rota','transporte_rota')
+    class meta:
+        fields = ('id', 'nome_rota', 'distancia_rota')
