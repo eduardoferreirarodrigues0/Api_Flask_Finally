@@ -1,4 +1,4 @@
-from flask_restful import Resource, request, reqparse
+from flask_restful import Resource, request
 from flask import jsonify
 from models import db, Motorista, Veiculo,Rota, MotoristaSchema, VeiculoSchema,RotaSchema
 
@@ -6,7 +6,7 @@ class MotoristaResource(Resource):
     #Cadastro de motorista
     def post(self):
         data = request.json
-        motorista = Motorista(nome_motorista=data['nome_motorista'], idade_motorista=data['idade_motorista'], tipo_veiculo_conduzido=data['tipo_veiculo_conduzido'])
+        motorista = Motorista(nome_motorista=data['nome_motorista'], idade_motorista=data['idade_motorista'], capacitacoes=data['capacitacoes'])
         db.session.add(motorista)
         db.session.commit()
         return MotoristaSchema().dump(motorista),201
@@ -31,7 +31,7 @@ class MotoristaResource(Resource):
         data = request.json
         motorista.nome_motorista = data.get('nome_motorista', motorista.nome_motorista)
         motorista.idade_motorista = data.get('idade_motorista', motorista.idade_motorista)
-        motorista.tipo_veiculo_conduzido = data.get('tipo_veiculo_conduzido', motorista.tipo_veiculo_conduzido)
+        motorista.tipo_veiculo_conduzido = data.get('capacitacoes', motorista.capacitacoes)
 
         db.session.commit()
 
@@ -49,45 +49,40 @@ class MotoristaResource(Resource):
         return jsonify({"message": "Motorista excluído com sucesso"}), 204
 
     #Função para verificar se o motorista pode conduzir o veículo
-    def pode_conduzir(self, motorista_id, veiculo_id):
+    def pode_conduzir(self, motorista_id, categoria_veiculo):
         motorista = Motorista.query.get(motorista_id)
-        veiculo = Veiculo.query.get(veiculo_id)
         
         if not motorista:
             return False
-        if not veiculo:
-            return False
         
         capacidades_motorista = motorista.capacitacoes.split(',')  # Exemplo: "1,2"
-        tipo_veiculo_veiculo = str(veiculo.categoria_veiculo)  # Exemplo: 1
-        
-        return tipo_veiculo_veiculo in capacidades_motorista
+        return str(categoria_veiculo) in capacidades_motorista
 
 
 class VeiculoResource(Resource):
     #Cadastro de veículo
     def post(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('categoria_veiculo', type=int, required=True)
-        parser.add_argument('placa_veiculo', type=str, required=True)
-        parser.add_argument('motorista_id', type=int, required=True)
-        args = parser.parse_args()
+        data = request.json
+        motorista_id = data['motorista_id']
+        categoria_veiculo = data['categoria_veiculo']
         
-        motorista_id = args['motorista_id']
+        motorista_resource = MotoristaResource()
+
+        if not motorista_resource.pode_conduzir(motorista_id, categoria_veiculo):
+            return {"message": "Motorista não capacitado para conduzir esse veículo"}, 400
+
         veiculo = Veiculo(
-            categoria_veiculo=args['categoria_veiculo'],
-            placa_veiculo=args['placa_veiculo'],
-            motorista_id=motorista_id
+            categoria_veiculo=categoria_veiculo,
+            placa_veiculo=data['placa_veiculo'],
+            motorista_id=motorista_id,
+            capacidade_veiculo=data['capacidade_veiculo']
         )
 
-        if not self.pode_conduzir(motorista_id, veiculo.categoria_veiculo):
-            return jsonify({"message": "Motorista não capacitado para conduzir esse veículo"}), 400
-        
         db.session.add(veiculo)
         db.session.commit()
+
+        return jsonify(VeiculoSchema().dump(veiculo)), 201
         
-        return VeiculoSchema().dump(veiculo), 201
-    
     #Listagem de veículo
     def get(self, veiculo_id=None):
         if veiculo_id is None:
@@ -106,11 +101,16 @@ class VeiculoResource(Resource):
             return jsonify({"message": "Veículo não encontrado"}), 404
 
         data = request.json
-        veiculo.categoria_veiculo = data.get('categoria_veiculo', veiculo.categoria_veiculo)
-        veiculo.placa_veiculo = data.get('placa_veiculo', veiculo.placa_veiculo)
-        veiculo.motorista_id = data.get('motorista_id', veiculo.motorista_id)
-        veiculo.capacidade_veiculo = data.get('capacidade_veiculo', veiculo.capacidade_veiculo)
+        categoria_veiculo = data.get('categoria_veiculo', veiculo.categoria_veiculo)
+        motorista_id = data.get('motorista_id', veiculo.motorista_id)
 
+        if not self.pode_conduzir(motorista_id, categoria_veiculo):
+            return jsonify({"message": "Motorista não capacitado para conduzir esse veículo"}), 400
+
+        veiculo.categoria_veiculo = categoria_veiculo
+        veiculo.placa_veiculo = data.get('placa_veiculo', veiculo.placa_veiculo)
+        veiculo.motorista_id = motorista_id
+        veiculo.capacidade_veiculo = data.get('capacidade_veiculo', veiculo.capacidade_veiculo)
 
         db.session.commit()
 
