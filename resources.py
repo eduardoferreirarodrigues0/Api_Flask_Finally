@@ -15,38 +15,39 @@ class MotoristaResource(Resource):
     def get(self, motorista_id=None):
         if motorista_id is None:
             motoristas = Motorista.query.all()
-            return jsonify(MotoristaSchema(many=True).dump(motoristas))
+            return MotoristaSchema(many=True).dump(motoristas)
         
         motorista = Motorista.query.get(motorista_id)
         if not motorista:
-            return jsonify({"message": "Motorista não encontrado"}), 404
-        return jsonify(MotoristaSchema().dump(motorista))
+            return {"message": "Motorista não encontrado"}, 404
+        return MotoristaSchema().dump(motorista)
+
     
     #Alteração de motorista
     def put(self, motorista_id):
         motorista = Motorista.query.get(motorista_id)
         if not motorista:
-            return jsonify({"message": "Motorista não encontrado"}), 404
+            return {"message": "Motorista não encontrado"}, 404
 
         data = request.json
         motorista.nome_motorista = data.get('nome_motorista', motorista.nome_motorista)
         motorista.idade_motorista = data.get('idade_motorista', motorista.idade_motorista)
-        motorista.tipo_veiculo_conduzido = data.get('capacitacoes', motorista.capacitacoes)
+        motorista.capacitacoes = data.get('capacitacoes', motorista.capacitacoes)
 
         db.session.commit()
 
-        return jsonify(MotoristaSchema().dump(motorista))
+        return MotoristaSchema().dump(motorista)
     
     #Exclusão de motorista
     def delete(self, motorista_id):
         motorista = Motorista.query.get(motorista_id)
         if not motorista:
-            return jsonify({"message": "Motorista não encontrado"}), 404
+            return {"message": "Motorista não encontrado"}, 404
         
         db.session.delete(motorista)
         db.session.commit()
 
-        return jsonify({"message": "Motorista excluído com sucesso"}), 204
+        return {"message": "Motorista excluído com sucesso"}, 204
 
     #Função para verificar se o motorista pode conduzir o veículo
     def pode_conduzir(self, motorista_id, categoria_veiculo):
@@ -81,31 +82,31 @@ class VeiculoResource(Resource):
         db.session.add(veiculo)
         db.session.commit()
 
-        return jsonify(VeiculoSchema().dump(veiculo)), 201
+        return VeiculoSchema().dump(veiculo), 201
         
     #Listagem de veículo
     def get(self, veiculo_id=None):
         if veiculo_id is None:
             veiculos = Veiculo.query.all()
-            return jsonify(VeiculoSchema(many=True).dump(veiculos))
+            return VeiculoSchema(many=True).dump(veiculos)
             
         veiculo = Veiculo.query.get(veiculo_id)
         if not veiculo:
-            return jsonify({"message": "Veículo não encontrado"}), 404
-        return jsonify(VeiculoSchema().dump(veiculo))
+            return {"message": "Veículo não encontrado"}, 404
+        return VeiculoSchema().dump(veiculo)
     
     #Alteração de veículo
     def put(self, veiculo_id):
         veiculo = Veiculo.query.get(veiculo_id)
         if not veiculo:
-            return jsonify({"message": "Veículo não encontrado"}), 404
+            return {"message": "Veículo não encontrado"}, 404
 
         data = request.json
         categoria_veiculo = data.get('categoria_veiculo', veiculo.categoria_veiculo)
         motorista_id = data.get('motorista_id', veiculo.motorista_id)
 
         if not self.pode_conduzir(motorista_id, categoria_veiculo):
-            return jsonify({"message": "Motorista não capacitado para conduzir esse veículo"}), 400
+            return {"message": "Motorista não capacitado para conduzir esse veículo"}, 400
 
         veiculo.categoria_veiculo = categoria_veiculo
         veiculo.placa_veiculo = data.get('placa_veiculo', veiculo.placa_veiculo)
@@ -114,18 +115,18 @@ class VeiculoResource(Resource):
 
         db.session.commit()
 
-        return jsonify(VeiculoSchema().dump(veiculo))
+        return VeiculoSchema().dump(veiculo)
     
     #Exclusão de veículo
     def delete(self, veiculo_id):
         veiculo = Veiculo.query.get(veiculo_id)
         if not veiculo:
-            return jsonify({"message": "Veículo não encontrado"}), 404
+            return {"message": "Veículo não encontrado"}, 404
         
         db.session.delete(veiculo)
         db.session.commit()
 
-        return jsonify({"message": "Veículo excluído com sucesso"}), 204
+        return {"message": "Veículo excluído com sucesso"}, 204
 
 class RotaResource(Resource):
     #Cadastro de rota
@@ -137,24 +138,24 @@ class RotaResource(Resource):
         rota = Rota(nome_rota=data['nome_rota'], distancia_rota=data['distancia_rota'], lotacao=data['lotacao'])
         db.session.add(rota)
         db.session.commit()
-        return jsonify(RotaSchema().dump(rota))
+        return RotaSchema().dump(rota)
     
     #Listagem de rota
     def get(self, rota_id=None):
         if rota_id is None:
             rotas = Rota.query.all()
-            return jsonify(RotaSchema(many=True).dump(rotas))
+            return RotaSchema(many=True).dump(rotas)
             
         rota = Rota.query.get(rota_id)
         if not rota:
-            return jsonify({"message": "Rota não encontrada"}), 404
-        return jsonify(RotaSchema().dump(rota))
+            return {"message": "Rota não encontrada"}, 404
+        return RotaSchema().dump(rota)
     
     #Alteração de rota
     def put(self, rota_id):
         rota = Rota.query.get(rota_id)
         if not rota:
-            return jsonify({"message": "Rota não encontrada"}), 404
+            return {"message": "Rota não encontrada"}, 404
 
         data = request.json
         rota.nome_rota = data.get('nome_rota', rota.nome_rota)
@@ -163,18 +164,18 @@ class RotaResource(Resource):
 
         db.session.commit()
 
-        return jsonify(RotaSchema().dump(rota))
+        return RotaSchema().dump(rota)
     
     #Exclusão de rota
     def delete(self, rota_id):
         rota = Rota.query.get(rota_id)
         if not rota:
-            return jsonify({"message": "Rota não encontrada"}), 404
+            return {"message": "Rota não encontrada"}, 404
         
         db.session.delete(rota)
         db.session.commit()
 
-        return jsonify({"message": "Rota excluída com sucesso"}), 204
+        return {"message": "Rota excluída com sucesso"}, 204
     
     #Função para verificar se o veículo atende a lotação da rota
     def atende_lotacao(self, veiculo_id, rota_id):

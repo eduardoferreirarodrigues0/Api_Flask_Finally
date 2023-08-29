@@ -22,14 +22,32 @@ class Rota(db.Model):
     distancia_rota = db.Column(db.Float, nullable=False)
     lotacao = db.Column(db.Integer, nullable=False)
 
-class MotoristaSchema(ma.Schema):
-    class meta:
-        fields = ('id', 'nome_motorista', 'idade_motorista', 'capacitacoes')
+class MotoristaSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Motorista
 
-class VeiculoSchema(ma.Schema):
-    class meta:
-        fields = ('id', 'categoria_veiculo', 'placa_veiculo', 'motorista_id', 'capacidade_veiculo')
+    id = ma.auto_field()
+    nome_motorista = ma.auto_field()
+    idade_motorista = ma.auto_field()
+    capacitacoes = ma.auto_field()
 
-class RotaSchema(ma.Schema):
-    class meta:
-        fields = ('id', 'nome_rota', 'distancia_rota', 'lotacao')
+class VeiculoSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Veiculo
+        include_fk = True
+
+    
+    id = ma.auto_field()
+    categoria_veiculo = ma.auto_field()
+    placa_veiculo = ma.auto_field()
+    motorista_id = ma.auto_field()
+    capacidade_veiculo= ma.auto_field()
+
+class RotaSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Rota
+    
+    id = ma.auto_field()
+    nome_rota = ma.auto_field()
+    distancia_rota = ma.auto_field()
+    lotacao = ma.auto_field()
