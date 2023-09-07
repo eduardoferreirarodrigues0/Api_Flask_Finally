@@ -139,7 +139,7 @@ class RotaResource(Resource):
 
     def post(self):
         data = request.json
-        # Verifique se já existe uma rota com o mesmo veículo e turno
+        # Verifica se já existe uma rota com o mesmo veículo e turno
         veiculo_id = data['veiculo_id']
         turno = data['turno']
 
