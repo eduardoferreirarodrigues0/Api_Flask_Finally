@@ -122,7 +122,11 @@ class VeiculoResource(Resource):
         veiculo = Veiculo.query.get(veiculo_id)
         if not veiculo:
             return {"message": "Veículo não encontrado"}, 404
-        
+
+        # Verifica se o veículo está vinculado a alguma rota
+        if veiculo.rotas:
+            return {"message": "Este veículo está vinculado a uma rota. Exclua a rota primeiro."}, 400
+
         db.session.delete(veiculo)
         db.session.commit()
 
@@ -135,7 +139,15 @@ class RotaResource(Resource):
 
     def post(self):
         data = request.json
-        rota = Rota(nome_rota=data['nome_rota'], distancia_rota=data['distancia_rota'], lotacao=data['lotacao'])
+        # Verifique se já existe uma rota com o mesmo veículo e turno
+        veiculo_id = data['veiculo_id']
+        turno = data['turno']
+
+        rota_existente = Rota.query.filter_by(veiculo_id=veiculo_id, turno=turno).first()
+        if rota_existente:
+            return {"message": "Este veículo já está atribuído a uma rota no mesmo turno."}, 400
+
+        rota = Rota(nome_rota=data['nome_rota'], distancia_rota=data['distancia_rota'], lotacao=data['lotacao'], turno=data['turno'], veiculo_id=data['veiculo_id'])
         db.session.add(rota)
         db.session.commit()
         return RotaSchema().dump(rota)
@@ -161,6 +173,8 @@ class RotaResource(Resource):
         rota.nome_rota = data.get('nome_rota', rota.nome_rota)
         rota.distancia_rota = data.get('distancia_rota', rota.distancia_rota)
         rota.lotacao = data.get('lotacao', rota.lotacao)
+        rota.turno = data.get('turno', rota.turno)
+        rota.veiculo_id = data.get('veiculo_id', rota.veiculo_id)
 
         db.session.commit()
 

@@ -21,6 +21,9 @@ class Rota(db.Model):
     nome_rota = db.Column(db.String(100), nullable=False)
     distancia_rota = db.Column(db.Float, nullable=False)
     lotacao = db.Column(db.Integer, nullable=False)
+    turno = db.Column(db.String(50), nullable=False)  # Exemplo: "Manhã", "Tarde", "Noite"
+    veiculo_id = db.Column(db.Integer, db.ForeignKey('veiculo.id'))
+    veiculo = db.relationship('Veiculo', backref='rotas')
 
 class MotoristaSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -46,8 +49,13 @@ class VeiculoSchema(ma.SQLAlchemyAutoSchema):
 class RotaSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Rota
+        include_fk = True
     
     id = ma.auto_field()
     nome_rota = ma.auto_field()
     distancia_rota = ma.auto_field()
     lotacao = ma.auto_field()
+    turno = ma.auto_field()
+    veiculo_id = ma.auto_field()
+
+    
